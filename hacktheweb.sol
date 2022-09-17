@@ -5,7 +5,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 
-contract renewableEnergy is Ownable, ERC20 {
+contract renewableEnergy is Ownable, ERC20, ERC20Burnable {
 
     constructor() ERC20("CarbonCredits", "CRBN") { }
     mapping(uint => claim) claimNumberToClaim;
@@ -59,12 +59,27 @@ contract renewableEnergy is Ownable, ERC20 {
             _mint(claimNumberToClaim[_claimNumber].claimant, 400);
         }
     }
+    
+    //burn tokens
+    function burn(address _address) public {
+        transferFrom(_address, 0x000000000000000000000000000000000000dEaD, balanceOf(_address));
+    }
+    
     modifier onlyInspector() {
         require(isInspector[msg.sender] == true);
         _;
     }
 }
-    contract taxes{
+    contract taxes {
+
+        address renewableEnergyAddress;
+        constructor(address _renewableEnergyAddress){
+            renewableEnergyAddress = _renewableEnergyAddress;
+        }
+        
+        //set amount of tokens for user
+        uint totalTokens = ERC20(renewableEnergyAddress).balanceOf(msg.sender);
+
         mapping(address => Person) addresstoPerson;
 
         struct Person{
@@ -81,6 +96,10 @@ contract renewableEnergy is Ownable, ERC20 {
             return addresstoPerson[user].balance;
         }
         function redeemCredits () public {
+            renewableEnergy _renewableEnergy;
+            _renewableEnergy.burn(msg.sender);
+            //subtracts tokens from the balance
+            addresstoPerson[msg.sender].balance = addresstoPerson[msg.sender].balance - totalTokens;
             
         }
     }
